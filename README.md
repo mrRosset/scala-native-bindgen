@@ -1,6 +1,8 @@
 # Scala Native Binding generator
 
-This tool generate Scala Native bindings from C headers. It's build upon clang and Libtooling and thus respect the conventions of clang-tools.
+[![Build Status](https://travis-ci.com/kornilova-l/scala-native-bindgen.svg?branch=master)](https://travis-ci.com/kornilova-l/scala-native-bindgen)
+
+This tool generate Scala Native bindings from C headers. It's built upon clang and Libtooling and thus respect the conventions of clang-tools.
 
 ## Usage
 
@@ -14,11 +16,33 @@ Running the previous command wild also yield warnings along with the translation
 
 ## Building
 
-Building this tool require building LLVM and Clang. This can take hours. Please consider using pre-built binaries.
+Building this tool requires [CMake], [LLVM] and [Clang]. See the [Scala
+Native setup guide] for instructions on installing the dependencies.
 
-* Follow the [building instructions](http://clang.llvm.org/docs/LibASTMatchersTutorial.html#step-0-obtaining-clang) for Clang (Only step 0)
-* Go to `llvm/tools/clang/tools/extra`
-* Clone this repository `git clone https://github.com/mrRosset/scala-native-bindgen scala-bindgen`
-* Add `add_subdirectory(scala-bindgen)` to the CMakeLists.txt in the extra folder
-* Re-run the llvm/clang compilation
+```sh
+mkdir -p target
+cd target
+cmake ..
+make
+./scalaBindgen /usr/include/ctype.h -name ctype --
+```
 
+ [CMake]: https://cmake.org/
+ [LLVM]: https://llvm.org/
+ [Clang]: https://clang.llvm.org/
+ [Scala Native setup guide]: http://www.scala-native.org/en/latest/user/setup.html
+
+## Testing
+
+The tests assumes that the above instructions for building has been
+followed.
+
+```sh
+cd tests
+sbt test
+```
+
+## License
+
+This project is distributed under the Scala license.
+[See LICENSE.txt for details](LICENSE.txt)
