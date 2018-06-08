@@ -58,6 +58,7 @@ std::string TypeTranslator::TranslateFunctionPointer(const clang::QualType& qtpe
 
     } else {
         llvm::errs() << "Unsupported function pointer type: " << qtpe.getAsString() << "\n";
+        llvm::errs().flush();
         exit(-1);
     }
 }
@@ -115,8 +116,9 @@ std::string TypeTranslator::TranslateEnum(const clang::QualType& qtpe){
 }
 
 std::string TypeTranslator::TranslateConstantArray(const clang::ConstantArrayType* ar, const std::string* avoid){
-    const llvm::APInt& size =  ar->getSize();
-    return "native.CArray[" + Translate(ar->getElementType(), avoid) + ", " + intToScalaNat((int)size.roundToDouble()) + "]";
+    const uint64_t size = ar->getSize().getZExtValue();
+    const std::string nat = uint64ToScalaNat(size);
+    return "native.CArray[" + Translate(ar->getElementType(), avoid) + ", " + nat + "]";
 }
 
 std::string TypeTranslator::Translate(const clang::QualType& qtpe, const std::string* avoid){
@@ -125,12 +127,15 @@ std::string TypeTranslator::Translate(const clang::QualType& qtpe, const std::st
 
     if(qtpe.isConstQualified() || (ctx && qtpe.isConstant(*ctx))){
         llvm::errs() << "Warning: Const qualifier not supported\n";
+        llvm::errs().flush();
     }
     if(qtpe.isVolatileQualified()){
         llvm::errs() << "Warning: Volatile qualifier not supported\n";
+        llvm::errs().flush();
     }
     if(qtpe.isRestrictQualified()){
         llvm::errs() << "Warning: Restrict qualifier not supported\n";
+        llvm::errs().flush();
     }
 
     const clang::Type* tpe = qtpe.getTypePtr();
@@ -149,7 +154,7 @@ std::string TypeTranslator::Translate(const clang::QualType& qtpe, const std::st
         return TranslatePointer(tpe->getAs<clang::PointerType>()->getPointeeType(), avoid);
 
     } else if(qtpe->isStructureType() || qtpe->isUnionType()){
-        return TranslateStructOrUnion(qtpe);
+        return handleReservedWords(TranslateStructOrUnion(qtpe));
 
     } else if(qtpe->isEnumeralType()){
         return TranslateEnum(qtpe);
@@ -162,10 +167,10 @@ std::string TypeTranslator::Translate(const clang::QualType& qtpe, const std::st
 
         auto found = typeMap.find(qtpe.getUnqualifiedType().getAsString());
         if(found != typeMap.end()){
-            return found->second;
+            return handleReservedWords(found->second);
         } else {
             //TODO: Properly handle non-default types
-            return qtpe.getUnqualifiedType().getAsString();
+            return handleReservedWords(qtpe.getUnqualifiedType().getAsString());
         }
     }
 
